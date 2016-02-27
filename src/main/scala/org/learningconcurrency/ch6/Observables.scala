@@ -2,7 +2,9 @@ package org.learningconcurrency
 package ch6
 
 
-
+/**
+  * More precisely, in a way, Observable[Z] is the same as Observer[Z] => Unit, which, in a way, is the same as (Notification[Z] => Unit) => Unit.
+  */
 
 
 
@@ -20,9 +22,10 @@ object ObservablesTimer extends App {
   import rx.lang.scala._
   import scala.concurrent.duration._
 
-  val o = Observable.timer(1.second)
+  val o = Observable.timer(1.second)//occurred after 1 second
   o.subscribe(_ => log(s"Timeout!"))
   o.subscribe(_ => log(s"Another timeout!"))
+  Thread.sleep(5000)
 }
 
 
@@ -92,7 +95,7 @@ object ObservablesCreateFuture extends App {
   }
 
   o.subscribe(log _)
-
+  Thread.sleep(1000)
 }
 
 
