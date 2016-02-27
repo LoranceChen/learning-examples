@@ -32,10 +32,22 @@ object ObservablesTimer extends App {
 object ObservablesExceptions extends App {
   import rx.lang.scala._
 
+  /**
+    * "When an Observable object produces an exception, it enters the error state
+    * and cannot emit more events." it for a Observer/subscribe, when occurred other
+    * Observer/subscribe also continue get it's events befor error state.
+    */
   val o = Observable.items(1, 2) ++ Observable.error(new RuntimeException) ++ Observable.items(3, 4)
   o.subscribe(
     x => log(s"number $x"),
     t => log(s"an error occurred: $t")
+  )
+
+  Thread.sleep(500)
+  //second observer also works
+  o.subscribe(
+    x => log(s"number - 2 - $x"),
+    t => log(s"an error occurred: - 2 - $t")
   )
 }
 
@@ -60,13 +72,18 @@ object ObservablesCreate extends App {
   val vms = Observable.apply[String] { obs =>
     obs.onNext("JVM")
     obs.onNext(".NET")
-    obs.onNext("DartVM")
     obs.onCompleted()
+
+    obs.onNext("DartVM")
     Subscription()
   }
 
   log(s"About to subscribe")
   vms.subscribe(log _, e => log(s"oops - $e"), () => log("Done!"))
+
+  val dVms = vms ++ vms//why it move onCompleted to last place
+  dVms.subscribe(log _, e => log(s"oops - $e"), () => log("Done!"))
+
   log(s"Subscription returned")
 
 }
@@ -78,24 +95,27 @@ object ObservablesCreateFuture extends App {
   import ExecutionContext.Implicits.global
 
   val f = Future {
-    Thread.sleep(500)
+    Thread.sleep(3000)
     "Back to the Future(s)"
   }
 
   val o = Observable.apply[String] { obs =>
     f foreach {
       case s =>
-        obs.onNext(s)
+        obs.onNext(s)//emit on future completed
         obs.onCompleted()
     }
     f.failed foreach {
       case t => obs.onError(t)
     }
+    obs.onNext("outer future")//emit immediately
     Subscription()
   }
 
   o.subscribe(log _)
-  Thread.sleep(1000)
+  log("has subscribe - ")
+
+  Thread.sleep(5000)
 }
 
 
