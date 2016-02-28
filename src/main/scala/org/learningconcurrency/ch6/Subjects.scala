@@ -12,7 +12,10 @@ object SubjectsOS extends App {
   import ObservablesSubscriptions._
 
   object RxOS {
+    //Subject 既可以被观察,又可以观察别人.它像一个中介为了分离观察者和被观察者
     val messageBus = Subject[String]()
+    //被观察.
+    //关于上面提到的分离,在这里的体现是log _观察着订阅了messageBus,但是messageBus还不清楚是什么Observable
     messageBus.subscribe(log _)
   }
 
@@ -29,6 +32,9 @@ object SubjectsOS extends App {
     TimeModule.systemClock,
     FileSystemModule.fileModifications
   )
+  //messageBus Subject 观察了systemClock和fileModifications两个可观察者
+  //这里messageBus订阅了两个可观察者,但是观察的messageBus的对象在其他地方.与不适用Subject最大的区别在于,订阅Subject的时间(上文
+  //的log _)可以先定义,这是直接使用一个Observable不能做到的(订阅之前必须先定义具体的Observable)
   val loadedModules = modules.map(_.subscribe(RxOS.messageBus))
   log(s"RxOS boot sequence finished!")
 

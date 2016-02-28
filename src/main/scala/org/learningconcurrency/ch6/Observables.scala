@@ -1,6 +1,12 @@
 package org.learningconcurrency
 package ch6
 
+import java.util.concurrent.TimeUnit
+
+import rx.lang.scala.Observable
+
+import scala.concurrent.duration.Duration
+
 
 /**
   * More precisely, in a way, Observable[Z] is the same as Observer[Z] => Unit, which, in a way, is the same as (Notification[Z] => Unit) => Unit.
@@ -72,6 +78,7 @@ object ObservablesCreate extends App {
   val vms = Observable.apply[String] { obs =>
     obs.onNext("JVM")
     obs.onNext(".NET")
+
     obs.onCompleted()
 
     obs.onNext("DartVM")
@@ -270,7 +277,24 @@ object ObservablesHotVsCold extends App {
 
 }
 
+object CompositionMapAndFilter extends App {
+  val half = Observable.interval(Duration(0.5,TimeUnit.SECONDS))
+  half.subscribe(msg => log(s"half occurred - $msg"))
 
+  val odds = half.filter(_ % 2 == 1).map(n => s"num $n").take(5)
+  odds.subscribe(
+    msg => log(s"odds msg - $msg"),
+    error =>   log(s"odds error - $error"),
+    () =>   log(s"odds complete")
+  )
+  Thread.sleep(3000)
+
+  //also begin with 0, because subscribe assigned count:Long for every Observer.Yes, It beyond how to implement.
+  half.subscribe(msg => log(s"second half observer - $msg"))
+
+  Thread.sleep(3000)
+
+}
 
 
 
